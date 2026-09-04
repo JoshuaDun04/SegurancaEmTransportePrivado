@@ -1,0 +1,59 @@
+### ============ GERAL ============
+.DS_Store
+*.log
+.env
+.env.local
+.vscode/
+.idea/
+*.swp
+
+### ============ APP (React Native / Android) ============
+app/node_modules/
+app/npm-debug.log
+app/yarn-error.log
+
+# Android
+app/android/.gradle/
+app/android/app/build/
+app/android/build/
+app/android/local.properties
+app/android/*.iml
+app/android/.idea/
+app/android/captures/
+app/android/app/release/
+app/android/app/debug/
+app/android/keystores/*.jks
+app/android/keystores/*.keystore
+
+# iOS (caso adicione suporte no futuro)
+app/ios/build/
+app/ios/Pods/
+app/ios/*.xcworkspace
+app/ios/*.xcuserstate
+
+# Metro / React Native
+app/.expo/
+app/*.hprof
+app/*.orig.*
+
+### ============ BACKEND (Python) ============
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/.venv/
+backend/venv/
+backend/env/
+
+# Modelos baixados automaticamente pelo YOLO/MediaPipe (pesados, não versionar)
+backend/*.pt
+backend/*.tflite
+backend/yolov8*.pt
+
+# Ultralytics gera essa pasta de configs/execuções locais
+backend/runs/
+backend/.config/Ultralytics/
+
+### ============ IMAGENS/VÍDEOS DE TESTE (geralmente pesados) ============
+*.mp4
+*.avi
+test_images/

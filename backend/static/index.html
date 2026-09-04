@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Protótipo — Segurança em Transporte Privado</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root {
+    --bg: #0b0d10;
+    --panel: #14171c;
+    --border: #23272e;
+    --text: #e8eaed;
+    --muted: #8b929c;
+    --accent: #3aa0ff;
+    --danger: #ff3b3b;
+    --safe: #2ecc71;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 24px 16px;
+  }
+  h1 { font-size: 1.1rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+  .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
+
+  .phone {
+    position: relative;
+    width: 380px;
+    max-width: 95vw;
+    aspect-ratio: 9 / 16;
+    background: #000;
+    border-radius: 28px;
+    border: 6px solid var(--border);
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(0,0,0,0.5);
+  }
+  video, canvas.overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  video { transform: scaleX(-1); }
+  canvas.overlay { transform: scaleX(-1); pointer-events: none; }
+
+  .status-bar {
+    position: absolute;
+    top: 12px; left: 12px; right: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 5;
+  }
+  .badge {
+    background: rgba(0,0,0,0.55);
+    border: 1px solid var(--border);
+    color: var(--safe);
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .badge .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .badge.danger { color: var(--danger); animation: pulse 0.8s infinite; }
+
+  .latency {
+    background: rgba(0,0,0,0.55);
+    color: var(--muted);
+    font-size: 0.7rem;
+    padding: 5px 10px;
+    border-radius: 20px;
+  }
+
+  .alarm-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(120, 0, 0, 0.55);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    z-index: 10;
+    animation: flash 0.6s infinite;
+  }
+  .alarm-overlay.active { display: flex; }
+  .alarm-overlay h2 { font-size: 1.4rem; margin: 0 0 8px; }
+  .alarm-overlay p { color: #ffe0e0; font-size: 0.85rem; margin: 4px 0; }
+  .alarm-overlay .reasons { font-size: 0.75rem; color: #ffb3b3; margin-top: 6px; }
+  .calling {
+    margin-top: 18px;
+    background: rgba(0,0,0,0.4);
+    padding: 10px 18px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+  }
+  .cancel-btn {
+    margin-top: 16px;
+    background: #fff;
+    color: #7a0000;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  @keyframes flash {
+    0%, 100% { background: rgba(120, 0, 0, 0.55); }
+    50% { background: rgba(200, 0, 0, 0.75); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .controls {
+    margin-top: 18px;
+    display: flex;
+    gap: 10px;
+  }
+  button.ctrl {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  button.ctrl:hover { border-color: var(--accent); }
+
+  .log {
+    margin-top: 16px;
+    width: 380px;
+    max-width: 95vw;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.72rem;
+    color: var(--muted);
+    height: 90px;
+    overflow-y: auto;
+    font-family: ui-monospace, monospace;
+  }
+</style>
+</head>
+<body>
+
+  <h1>PROTÓTIPO ACADÊMICO — DETECÇÃO DE PERIGO</h1>
+  <div class="subtitle">Simulação do app fixado no suporte da multimídia</div>
+
+  <div class="phone">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="overlay" class="overlay"></canvas>
+
+    <div class="status-bar">
+      <div id="statusBadge" class="badge"><span class="dot"></span> Monitorando</div>
+      <div id="latency" class="latency">-- ms</div>
+    </div>
+
+    <div id="alarmOverlay" class="alarm-overlay">
+      <h2>⚠️ SITUAÇÃO DE PERIGO DETECTADA</h2>
+      <p id="alarmReasons" class="reasons"></p>
+      <div class="calling">
+        <div id="callingText">Ligando para a Polícia...</div>
+        <div id="callingTimer">00:00</div>
+      </div>
+      <button class="cancel-btn" onclick="cancelAlarm()">Estou seguro(a) — cancelar</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="ctrl" id="startBtn" onclick="start()">Iniciar câmera</button>
+    <button class="ctrl" id="testBtn" onclick="testAlarm()">Testar alarme (simulado)</button>
+  </div>
+
+  <div class="log" id="log"></div>
+
+<script>
+const video = document.getElementById('video');
+const overlay = document.getElementById('overlay');
+const ctx = overlay.getContext('2d');
+const statusBadge = document.getElementById('statusBadge');
+const latencyEl = document.getElementById('latency');
+const alarmOverlay = document.getElementById('alarmOverlay');
+const alarmReasons = document.getElementById('alarmReasons');
+const logEl = document.getElementById('log');
+
+let ws = null;
+let sending = false;
+let alarmActive = false;
+let callingSeconds = 0;
+let callingInterval = null;
+let audioCtx = null;
+
+function log(msg) {
+  const t = new Date().toLocaleTimeString();
+  logEl.innerHTML = `[${t}] ${msg}<br>` + logEl.innerHTML;
+}
+
+const REASON_LABELS = {
+  objeto_cortante: "Objeto cortante detectado",
+  possivel_estrangulamento: "Padrão de possível estrangulamento",
+};
+
+async function start() {
+  document.getElementById('startBtn').disabled = true;
+  const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 480, height: 640 } });
+  video.srcObject = stream;
+  await new Promise(r => video.onloadedmetadata = r);
+  overlay.width = video.videoWidth;
+  overlay.height = video.videoHeight;
+
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}/ws`);
+  ws.onopen = () => { log('Conectado ao servidor local.'); loop(); };
+  ws.onclose = () => log('Desconectado do servidor.');
+  ws.onmessage = (ev) => handleResult(JSON.parse(ev.data));
+}
+
+function loop() {
+  setInterval(() => {
+    if (sending || !ws || ws.readyState !== 1) return;
+    sending = true;
+    const canvas = document.createElement('canvas');
+    canvas.width = 320; canvas.height = Math.round(320 * video.videoHeight / video.videoWidth);
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    const b64 = canvas.toDataURL('image/jpeg', 0.6);
+    ws.send(JSON.stringify({ frame: b64 }));
+  }, 250); // ~4 fps -> suficiente pra demo e leve pro servidor
+}
+
+function handleResult(result) {
+  sending = false;
+  latencyEl.textContent = `${result.inference_ms} ms`;
+  drawDetections(result.weapon.detections);
+
+  if (result.alert) {
+    triggerAlarm(result.reasons);
+    log(`ALERTA: ${result.reasons.map(r => REASON_LABELS[r] || r).join(', ')}`);
+  } else if (!alarmActive) {
+    statusBadge.classList.remove('danger');
+    statusBadge.innerHTML = '<span class="dot"></span> Monitorando';
+  }
+}
+
+function drawDetections(detections) {
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+  ctx.lineWidth = 3;
+  ctx.font = '14px sans-serif';
+  const scaleX = overlay.width / 320;
+  const scaleY = overlay.height / Math.round(320 * video.videoHeight / video.videoWidth);
+  detections.forEach(d => {
+    const danger = d.class === 'knife' || d.class === 'scissors';
+    ctx.strokeStyle = danger ? '#ff3b3b' : '#3aa0ff';
+    ctx.fillStyle = ctx.strokeStyle;
+    const [x1, y1, x2, y2] = d.bbox;
+    ctx.strokeRect(x1 * scaleX, y1 * scaleY, (x2 - x1) * scaleX, (y2 - y1) * scaleY);
+    ctx.fillText(`${d.class} ${(d.confidence * 100).toFixed(0)}%`, x1 * scaleX, y1 * scaleY - 4);
+  });
+}
+
+function beep() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'square';
+  osc.frequency.value = 880;
+  gain.gain.value = 0.15;
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start();
+  setTimeout(() => osc.stop(), 220);
+}
+
+function triggerAlarm(reasons) {
+  if (alarmActive) return;
+  alarmActive = true;
+  statusBadge.classList.add('danger');
+  statusBadge.innerHTML = '<span class="dot"></span> PERIGO';
+  alarmReasons.textContent = reasons.map(r => REASON_LABELS[r] || r).join(' • ');
+  alarmOverlay.classList.add('active');
+  callingSeconds = 0;
+  document.getElementById('callingText').textContent = 'Ligando para a Polícia...';
+  callingInterval = setInterval(() => {
+    callingSeconds++;
+    const m = String(Math.floor(callingSeconds / 60)).padStart(2, '0');
+    const s = String(callingSeconds % 60).padStart(2, '0');
+    document.getElementById('callingTimer').textContent = `${m}:${s}`;
+    beep();
+    if (callingSeconds === 4) document.getElementById('callingText').textContent = 'Chamada simulada conectada (protótipo).';
+  }, 1000);
+}
+
+function cancelAlarm() {
+  alarmActive = false;
+  alarmOverlay.classList.remove('active');
+  clearInterval(callingInterval);
+  statusBadge.classList.remove('danger');
+  statusBadge.innerHTML = '<span class="dot"></span> Monitorando';
+  log('Alarme cancelado pelo usuário.');
+}
+
+function testAlarm() {
+  triggerAlarm(['objeto_cortante', 'possivel_estrangulamento']);
+  log('Teste manual de alarme disparado.');
+}
+</script>
+</body>
+</html>
