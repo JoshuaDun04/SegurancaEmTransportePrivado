@@ -1,15 +1,27 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import {
   Camera,
+  type CameraRef,
+  CommonResolutions,
   useCameraDevice,
   useCameraPermission,
+  usePhotoOutput,
 } from 'react-native-vision-camera';
 import RNFS from 'react-native-fs';
 import { useDetectionSocket } from '../hooks/useDetectionSocket';
 import AlarmOverlay from '../components/AlarmOverlay';
 
-const CAPTURE_INTERVAL_MS = 300; // ~3 frames/segundo — suficiente pra detecção, leve pra rede
+// Intervalo mínimo entre capturas. O ritmo real é ditado pelo servidor: um frame
+// novo só é capturado depois que a resposta do anterior chega (ver useDetectionSocket).
+const CAPTURE_INTERVAL_MS = 150;
+// Largura do frame enviado. O YOLO trabalha em 640px, então mandar mais que isso
+// só aumenta o tempo de codificação e de rede.
+const FRAME_WIDTH = 480;
+const JPEG_QUALITY = 60;
+// Depois de cancelar o alarme, ignora novos alertas por um tempo: frames que já
+// estavam a caminho do servidor ainda podem voltar com alert=true.
+const ALARM_COOLDOWN_MS = 5000;
 
 type Props = {
   serverAddress: string;
@@ -17,43 +29,75 @@ type Props = {
 };
 
 export default function CameraScreen({ serverAddress, onBack }: Props) {
-  const camera = useRef<Camera>(null);
   const device = useCameraDevice('back');
   const { hasPermission, requestPermission } = useCameraPermission();
+  // Resolução baixa (480p) e compressão maior: o YOLO redimensiona para 640px de
+  // qualquer forma, e fotos menores reduzem muito a latência na rede.
+  const photoOutput = usePhotoOutput({
+    targetResolution: CommonResolutions.VGA_4_3,
+    quality: 0.6,
+    qualityPrioritization: device?.supportsSpeedQualityPrioritization ? 'speed' : 'balanced',
+  });
 
-  const { status, lastResult, sendFrame } = useDetectionSocket(serverAddress);
+  const { status, lastResult, roundTripMs, canSendFrame, sendFrame, sendReset } =
+    useDetectionSocket(serverAddress);
   const [alarmActive, setAlarmActive] = useState(false);
   const [alarmReasons, setAlarmReasons] = useState<string[]>([]);
-  const sendingRef = useRef(false);
+  const cameraRef = useRef<CameraRef>(null);
+  const capturingRef = useRef(false);
+  // O snapshot do preview é bem mais rápido que tirar foto, mas nem todo aparelho
+  // suporta; se falhar uma vez, passa a usar a captura de foto.
+  const snapshotSupportedRef = useRef(true);
+  const cooldownUntilRef = useRef(0);
 
   useEffect(() => {
     if (!hasPermission) requestPermission();
   }, [hasPermission, requestPermission]);
 
-  // Loop de captura: tira uma foto, converte pra base64 e manda pro servidor.
+  // Captura um frame e devolve o caminho de um JPEG temporário.
+  const captureFrame = useCallback(async (): Promise<string> => {
+    if (snapshotSupportedRef.current && cameraRef.current) {
+      try {
+        const snapshot = await cameraRef.current.takeSnapshot();
+        const height = Math.round((snapshot.height * FRAME_WIDTH) / snapshot.width);
+        const small = await snapshot.resizeAsync(FRAME_WIDTH, height);
+        return await small.saveToTemporaryFileAsync('jpg', JPEG_QUALITY);
+      } catch (e) {
+        console.warn('Snapshot indisponível, usando captura de foto', e);
+        snapshotSupportedRef.current = false;
+      }
+    }
+    const { filePath } = await photoOutput.capturePhotoToFile(
+      { flashMode: 'off', enableShutterSound: false },
+      {},
+    );
+    return filePath;
+  }, [photoOutput]);
+
+  // Loop de captura: pega um frame, converte pra base64 e manda pro servidor.
   useEffect(() => {
     const interval = setInterval(async () => {
-      if (sendingRef.current || !camera.current || status !== 'connected') return;
-      sendingRef.current = true;
+      if (capturingRef.current || status !== 'connected' || !canSendFrame()) return;
+      capturingRef.current = true;
       try {
-        const photo = await camera.current.takePhoto({ flash: 'off' });
-        const base64 = await RNFS.readFile(photo.path, 'base64');
+        const filePath = await captureFrame();
+        const base64 = await RNFS.readFile(filePath, 'base64');
         sendFrame(base64);
         // remove o arquivo temporário pra não acumular lixo no dispositivo
-        RNFS.unlink(photo.path).catch(() => {});
+        RNFS.unlink(filePath).catch(() => {});
       } catch (e) {
         console.warn('Erro ao capturar/enviar frame', e);
       } finally {
-        sendingRef.current = false;
+        capturingRef.current = false;
       }
     }, CAPTURE_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [status, sendFrame]);
+  }, [status, canSendFrame, sendFrame, captureFrame]);
 
   // Reage ao resultado do servidor
   useEffect(() => {
-    if (lastResult?.alert && !alarmActive) {
+    if (lastResult?.alert && !alarmActive && Date.now() > cooldownUntilRef.current) {
       setAlarmActive(true);
       setAlarmReasons(lastResult.reasons);
     }
@@ -78,17 +122,21 @@ export default function CameraScreen({ serverAddress, onBack }: Props) {
   return (
     <View style={styles.container}>
       <Camera
-        ref={camera}
+        ref={cameraRef}
         style={StyleSheet.absoluteFill}
         device={device}
         isActive={true}
-        photo={true}
+        outputs={[photoOutput]}
       />
 
       <View style={styles.statusBar}>
         <View style={[styles.badge, alarmActive && styles.badgeDanger]}>
           <Text style={styles.badgeText}>
-            {alarmActive ? '⚠ PERIGO' : status === 'connected' ? '● Monitorando' : `● ${status}`}
+            {alarmActive
+              ? '⚠ PERIGO'
+              : status === 'connected'
+                ? `● Monitorando${roundTripMs !== null ? ` · ${roundTripMs} ms` : ''}`
+                : `● ${status}`}
           </Text>
         </View>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
@@ -99,7 +147,11 @@ export default function CameraScreen({ serverAddress, onBack }: Props) {
       {alarmActive && (
         <AlarmOverlay
           reasons={alarmReasons}
-          onCancel={() => setAlarmActive(false)}
+          onCancel={() => {
+            cooldownUntilRef.current = Date.now() + ALARM_COOLDOWN_MS;
+            sendReset();
+            setAlarmActive(false);
+          }}
         />
       )}
     </View>

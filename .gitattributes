@@ -1,0 +1,4 @@
+# Scripts do Windows precisam de CRLF, senão o cmd interpreta linhas errado
+*.bat text eol=crlf
+# Script de shell do Gradle precisa de LF para rodar em Linux/Mac
+app/android/gradlew text eol=lf

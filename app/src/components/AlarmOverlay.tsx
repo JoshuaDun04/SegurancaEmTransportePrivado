@@ -52,7 +52,7 @@ export default function AlarmOverlay({ reasons, onCancel }: Props) {
 
 const styles = StyleSheet.create({
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(160,0,0,0.75)',
     alignItems: 'center',
     justifyContent: 'center',

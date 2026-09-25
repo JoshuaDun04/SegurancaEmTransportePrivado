@@ -203,6 +203,13 @@ let alarmActive = false;
 let callingSeconds = 0;
 let callingInterval = null;
 let audioCtx = null;
+// Depois de cancelar, ignora alertas por um tempo: frames já enviados ainda podem voltar com alert=true.
+const ALARM_COOLDOWN_MS = 5000;
+let cooldownUntil = 0;
+
+// Pares de keypoints COCO ligados no desenho do esqueleto (braços, tronco, pernas).
+const SKELETON = [[5, 7], [7, 9], [6, 8], [8, 10], [5, 6], [5, 11], [6, 12], [11, 12],
+                  [11, 13], [13, 15], [12, 14], [14, 16]];
 
 function log(msg) {
   const t = new Date().toLocaleTimeString();
@@ -244,9 +251,9 @@ function loop() {
 function handleResult(result) {
   sending = false;
   latencyEl.textContent = `${result.inference_ms} ms`;
-  drawDetections(result.weapon.detections);
+  drawDetections(result.weapon.detections, result.choke.people, result.choke.danger_this_frame);
 
-  if (result.alert) {
+  if (result.alert && Date.now() > cooldownUntil) {
     triggerAlarm(result.reasons);
     log(`ALERTA: ${result.reasons.map(r => REASON_LABELS[r] || r).join(', ')}`);
   } else if (!alarmActive) {
@@ -255,7 +262,7 @@ function handleResult(result) {
   }
 }
 
-function drawDetections(detections) {
+function drawDetections(detections, people, chokeDanger) {
   ctx.clearRect(0, 0, overlay.width, overlay.height);
   ctx.lineWidth = 3;
   ctx.font = '14px sans-serif';
@@ -268,6 +275,26 @@ function drawDetections(detections) {
     const [x1, y1, x2, y2] = d.bbox;
     ctx.strokeRect(x1 * scaleX, y1 * scaleY, (x2 - x1) * scaleX, (y2 - y1) * scaleY);
     ctx.fillText(`${d.class} ${(d.confidence * 100).toFixed(0)}%`, x1 * scaleX, y1 * scaleY - 4);
+  });
+
+  // Esqueletos do YOLO-Pose: ficam vermelhos no frame em que a heurística vê perigo.
+  ctx.strokeStyle = ctx.fillStyle = chokeDanger ? '#ff3b3b' : '#3dd68c';
+  ctx.lineWidth = 2;
+  people.forEach(({ keypoints: k }) => {
+    const ok = (i) => k[i][2] >= 0.5;
+    SKELETON.forEach(([a, b]) => {
+      if (!ok(a) || !ok(b)) return;
+      ctx.beginPath();
+      ctx.moveTo(k[a][0] * scaleX, k[a][1] * scaleY);
+      ctx.lineTo(k[b][0] * scaleX, k[b][1] * scaleY);
+      ctx.stroke();
+    });
+    k.forEach(([x, y, c]) => {
+      if (c < 0.5) return;
+      ctx.beginPath();
+      ctx.arc(x * scaleX, y * scaleY, 3, 0, 2 * Math.PI);
+      ctx.fill();
+    });
   });
 }
 
@@ -304,6 +331,9 @@ function triggerAlarm(reasons) {
 
 function cancelAlarm() {
   alarmActive = false;
+  cooldownUntil = Date.now() + ALARM_COOLDOWN_MS;
+  // Zera o histórico de frames no servidor para o alarme não voltar na hora.
+  if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'reset' }));
   alarmOverlay.classList.remove('active');
   clearInterval(callingInterval);
   statusBadge.classList.remove('danger');

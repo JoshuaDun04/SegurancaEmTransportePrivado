@@ -2,6 +2,5 @@ ultralytics
 fastapi
 uvicorn[standard]
 opencv-python-headless
-mediapipe
 websockets
 python-multipart

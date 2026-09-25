@@ -44,7 +44,7 @@ backend/.venv/
 backend/venv/
 backend/env/
 
-# Modelos baixados automaticamente pelo YOLO/MediaPipe (pesados, não versionar)
+# Modelos baixados automaticamente pelo YOLO (pesados, não versionar)
 backend/*.pt
 backend/*.tflite
 backend/yolov8*.pt

@@ -9,7 +9,7 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" backgroundColor="#0b0d10" />
+      <StatusBar barStyle="light-content" />
       {screen === 'settings' ? (
         <SettingsScreen
           initialAddress={serverAddress}
