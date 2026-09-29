@@ -114,7 +114,7 @@ def sistema_por_video(df, detectores):
 
 def fmt_tempo(quadros):
     if not quadros:
-        return "—"
+        return "-"
     med = np.median(quadros)
     return (f"{med:.0f} ({min(quadros):.0f}–{max(quadros):.0f}) ≈ {med / FPS_DATASET:.1f} s "
             f"({min(quadros) / FPS_DATASET:.1f}–{max(quadros) / FPS_DATASET:.1f} s)")
@@ -139,7 +139,7 @@ def main():
     md.append(f"Quadros: {len(zs)} ({zs.rotulo.value_counts().to_dict()})\n")
 
     # ---------- Faca ----------
-    md.append("## Faca — por quadro (positivos: FACA; negativos: normal)\n")
+    md.append("## Faca: por quadro (positivos: FACA; negativos: normal)\n")
     md.append("| Detector | Limiar | Revocação | Alarme falso | AUC |")
     md.append("|---|---|---|---|---|")
     configs_faca = [(f"YOLOv8{m} COCO", f"faca_{m}", t, zs) for m in "nsm" for t in (0.45, 0.25)]
@@ -152,7 +152,7 @@ def main():
     # ---------- Estrangulamento ----------
     for p in "ns":
         zs[f"escore_enf_{p}"] = np.minimum(zs[f"outro_{p}"], zs[f"proprio_{p}"])
-    md.append("\n## Estrangulamento — por quadro (positivos: ENFORCAR; negativos: normal)\n")
+    md.append("\n## Estrangulamento: por quadro (positivos: ENFORCAR; negativos: normal)\n")
     md.append("| Método | Limiar | Revocação | Alarme falso | Alarme em cenas de faca | AUC |")
     md.append("|---|---|---|---|---|---|")
     for p in "ns":
@@ -225,7 +225,7 @@ def main():
             neg = negativos(g)
             alarme = (g.ft_faca >= 0.45) | (g.ft_enforcar >= 0.45)
             res_csv = RAIZ / "dados" / "treinos" / f"yolov8n_parte{parte}" / "treino" / "results.csv"
-            mapa = "—"
+            mapa = "-"
             if res_csv.exists():
                 r = pd.read_csv(res_csv)
                 r.columns = [c.strip() for c in r.columns]

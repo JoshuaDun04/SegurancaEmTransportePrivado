@@ -2,7 +2,7 @@
 
 Quadros: 1855 ({'ENFORCAR': 786, 'FACA': 594, 'normal': 475})
 
-## Faca — por quadro (positivos: FACA; negativos: normal)
+## Faca: por quadro (positivos: FACA; negativos: normal)
 
 | Detector | Limiar | Revocação | Alarme falso | AUC |
 |---|---|---|---|---|
@@ -15,7 +15,7 @@ Quadros: 1855 ({'ENFORCAR': 786, 'FACA': 594, 'normal': 475})
 | YOLOv8n ajustado | 0.45 | 77.9% | 0.0% | 0.915 |
 | YOLOv8n ajustado | 0.25 | 80.0% | 0.0% | 0.915 |
 
-## Estrangulamento — por quadro (positivos: ENFORCAR; negativos: normal)
+## Estrangulamento: por quadro (positivos: ENFORCAR; negativos: normal)
 
 | Método | Limiar | Revocação | Alarme falso | Alarme em cenas de faca | AUC |
 |---|---|---|---|---|---|
@@ -32,7 +32,7 @@ Quadros: 1855 ({'ENFORCAR': 786, 'FACA': 594, 'normal': 475})
 
 | Situação | Método | Vídeos detectados | Quadros até o alarme (mediana; faixa) | Vídeos normais com alarme | Alarmes falsos |
 |---|---|---|---|---|---|
-| Faca | YOLOv8n COCO (0,45) | 0/6 | — | 0/5 | 0 |
+| Faca | YOLOv8n COCO (0,45) | 0/6 | - | 0/5 | 0 |
 | Faca | YOLOv8m COCO (0,25) | 5/6 | 12 (3–27) ≈ 1.0 s (0.2–2.2 s) | 2/5 | 2 |
 | Estrangulamento | Heurística pose n (τ=0,6) | 7/8 | 24 (14–42) ≈ 2.0 s (1.1–3.4 s) | 2/5 | 2 |
 | Estrangulamento | Heurística pose s (τ=0,6) | 8/8 | 14 (7–67) ≈ 1.1 s (0.6–5.4 s) | 0/5 | 0 |

@@ -44,7 +44,7 @@ export default function AlarmOverlay({ reasons, onCancel }: Props) {
       </View>
 
       <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
-        <Text style={styles.cancelBtnText}>Estou seguro(a) — cancelar</Text>
+        <Text style={styles.cancelBtnText}>Estou seguro(a), cancelar</Text>
       </TouchableOpacity>
     </View>
   );

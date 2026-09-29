@@ -108,7 +108,7 @@ def resumo_janela(df, coluna, alvo, k, w):
         elif tipo == "normal":
             n_normal += 1
             normais_alarme += bool(inicios)
-    tempo = f"{np.median(tempos):.1f} s" if tempos else "—"
+    tempo = f"{np.median(tempos):.1f} s" if tempos else "-"
     return f"{detectadas}/{n_alvo}", f"{normais_alarme}/{n_normal}", tempo
 
 

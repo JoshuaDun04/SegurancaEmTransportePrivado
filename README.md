@@ -1,9 +1,9 @@
-# PEX8 — Sistema de Segurança para Transporte Privado
+# PEX8: Sistema de Segurança para Transporte Privado
 
 > Projeto acadêmico: sistema de detecção de situações de perigo (objeto
 > cortante e possível estrangulamento) para uso dentro de veículos de
-> transporte por aplicativo (Uber, 99, etc.), com processamento de IA local
-> — sem depender de servidores em nuvem.
+> transporte por aplicativo (Uber, 99, etc.), com processamento de IA local,
+> sem depender de servidores em nuvem.
 
 ## A ideia
 
@@ -30,14 +30,14 @@ Por que processar no servidor e não no celular? O celular pode ser simples
 (não roda IA, gasta menos bateria e esquenta menos), o servidor usa GPU e os
 modelos são atualizados em um lugar só. Para o servidor remoto, o artigo
 estima o consumo de dados (~0,26–0,86 GB/h) e a capacidade de uma GPU
-(~10 veículos a 5 quadros/s) — ver `experimentos/estimar_dados.py`.
+(~10 veículos a 5 quadros/s). Ver `experimentos/estimar_dados.py`.
 
 ## Estrutura do repositório
 
 ```
 PEX8/
-├── app/        → aplicativo React Native (Android) — captura e envia a câmera
-└── backend/    → servidor Python — roda os modelos de IA e dispara o alarme
+├── app/        → aplicativo React Native (Android): captura e envia a câmera
+└── backend/    → servidor Python: roda os modelos de IA e dispara o alarme
 ```
 
 ## Instalação completa em um PC novo (Windows)
@@ -53,7 +53,7 @@ parte demorada (downloads e primeiro build) só acontece uma vez.
 | **Python 3.10 ou mais novo** | [python.org](https://www.python.org/downloads/) | ⚠️ Marque **"Add python.exe to PATH"** na primeira tela do instalador |
 | **Node.js 22.11 ou mais novo** (LTS) | [nodejs.org](https://nodejs.org) | Opções padrão |
 | **Android Studio** | [developer.android.com/studio](https://developer.android.com/studio) | Na primeira abertura, siga o assistente (modo *Standard*): ele baixa o Android SDK |
-| **Driver NVIDIA** (opcional) | [nvidia.com/drivers](https://www.nvidia.com/Download/index.aspx) | Só se o PC tiver placa NVIDIA — deixa a detecção ~2,6x mais rápida |
+| **Driver NVIDIA** (opcional) | [nvidia.com/drivers](https://www.nvidia.com/Download/index.aspx) | Só se o PC tiver placa NVIDIA; deixa a detecção ~2,6x mais rápida |
 
 ### 2. Configurar o Android SDK
 
@@ -62,7 +62,7 @@ No Android Studio: **More Actions → SDK Manager** (ou *Settings → Languages
 Details** e instale:
 
 - **NDK (Side by side) 27.1.12297006**
-- **CMake 3.31.6** — ⚠️ não use o 3.22.1 que vem marcado por padrão: ele
+- **CMake 3.31.6**: ⚠️ não use o 3.22.1 que vem marcado por padrão: ele
   quebra o build no Windows (erro `build.ninja still dirty`)
 - **Android SDK Platform-Tools** (normalmente já vem instalado)
 
@@ -117,7 +117,7 @@ Isso leva de 5 a 20 minutos, dependendo da internet. Quando aparecer
 também mostra se os modelos carregaram na **GPU** ou na **CPU**.
 
 **Teste rápido:** abra `http://localhost:8000` no navegador do PC e inicie a
-webcam — devem aparecer os esqueletos das pessoas na imagem.
+webcam. Devem aparecer os esqueletos das pessoas na imagem.
 
 Se o Firewall do Windows perguntar, clique em **Permitir acesso**.
 
@@ -131,8 +131,8 @@ npm ci
 ```
 
 Crie o arquivo `app\android\local.properties` (ele não vai para o git) com
-o caminho do CMake 3.31 — troque `<seu-usuario>` pelo seu usuário do
-Windows:
+o caminho do CMake 3.31 (troque `<seu-usuario>` pelo seu usuário do
+Windows):
 
 ```properties
 cmake.dir=C\:/Users/<seu-usuario>/AppData/Local/Android/Sdk/cmake/3.31.6
@@ -157,7 +157,7 @@ C:\Projetos\PEX8\app\android\app\build\outputs\apk\release\app-release.apk
 
 ### 7. Instalar o APK no celular
 
-**Opção A — pelo cabo USB (recomendado):**
+**Opção A: pelo cabo USB (recomendado)**
 1. No celular, ative as *Opções do desenvolvedor*: Configurações → Sobre o
    telefone → toque 7 vezes em **Número da versão**.
 2. Em Opções do desenvolvedor, ative a **Depuração USB**.
@@ -167,7 +167,7 @@ C:\Projetos\PEX8\app\android\app\build\outputs\apk\release\app-release.apk
    adb install -r C:\Projetos\PEX8\app\android\app\build\outputs\apk\release\app-release.apk
    ```
 
-**Opção B — sem cabo:** envie o `app-release.apk` para o celular (Drive,
+**Opção B: sem cabo.** envie o `app-release.apk` para o celular (Drive,
 WhatsApp...), abra o arquivo e permita "instalar apps de fontes
 desconhecidas".
 
@@ -184,7 +184,7 @@ Com o `iniciar.bat` rodando, escolha **uma** forma de conexão:
 - **Wi-Fi:** o celular e o PC precisam estar **na mesma rede** (mesmo
   roteador, fora de rede de visitantes). No app, digite o endereço que o
   `iniciar.bat` mostrou (ex: `192.168.0.15:8000`). Para conferir, abra esse
-  endereço no navegador do celular — a página de teste tem que abrir.
+  endereço no navegador do celular; a página de teste tem que abrir.
 
 Toque em **Conectar e iniciar monitoramento** e permita o acesso à câmera. O
 selo no topo deve mostrar `● Monitorando · XX ms` (tempo de resposta de
@@ -196,8 +196,8 @@ cada frame).
 |---|---|---|
 | Estrangulamento | Duas pessoas no quadro; uma põe a mão no pescoço da outra por ~2 s | Alarme "possível estrangulamento" |
 | Falso positivo | Uma pessoa sozinha coça o pescoço com uma mão | **Não** dispara |
-| Objeto cortante | Faca ou tesoura bem visível e iluminada por 1–2 s | Alarme "objeto cortante" (o modelo genérico ainda erra bastante — ver Limitações) |
-| Cancelar | "Estou seguro(a) — cancelar" | Alarme some e não volta por 5 s |
+| Objeto cortante | Faca ou tesoura bem visível e iluminada por 1–2 s | Alarme "objeto cortante" (o modelo genérico ainda erra bastante, ver Limitações) |
+| Cancelar | "Estou seguro(a), cancelar" | Alarme some e não volta por 5 s |
 
 Problemas comuns e soluções estão nas tabelas de troubleshooting de
 [`app/README.md`](./app/README.md#troubleshooting-problemas-reais-encontrados-no-desenvolvimento)
@@ -212,8 +212,8 @@ e [`backend/README.md`](./backend/README.md).
 
 Cada pasta tem seu próprio README detalhado com passo a passo de instalação:
 
-- 📱 [`app/README.md`](./app/README.md) — detalhes do app, configurações nativas e troubleshooting
-- 🖥️ [`backend/README.md`](./backend/README.md) — como rodar o servidor de detecção
+- 📱 [`app/README.md`](./app/README.md): detalhes do app, configurações nativas e troubleshooting
+- 🖥️ [`backend/README.md`](./backend/README.md): como rodar o servidor de detecção
 
 ## Detecções implementadas
 
@@ -225,7 +225,7 @@ Cada pasta tem seu próprio README detalhado com passo a passo de instalação:
 ## Limitações conhecidas (importante para o relatório acadêmico)
 
 1. **Modelo genérico, não especializado**: o YOLO usado é pré-treinado no
-   dataset COCO — reconhece a classe "knife" nativamente, mas nunca viu
+   dataset COCO. Reconhece a classe "knife" nativamente, mas nunca viu
    exemplos específicos de faca empunhada como ameaça dentro de um carro. Uma
    versão de produção precisaria de fine-tuning com um dataset próprio. Nos
    primeiros testes com o app, o estrangulamento foi detectado, mas a faca
@@ -243,7 +243,7 @@ Cada pasta tem seu próprio README detalhado com passo a passo de instalação:
    desenvolvimento/testes, o app só simula a chamada (tela + contador), sem
    discar de verdade.
 4. Limiares de confiança e de frames consecutivos foram escolhidos
-   empiricamente — precisam de validação com dados reais antes de qualquer
+   empiricamente e precisam de validação com dados reais antes de qualquer
    uso além de demonstração acadêmica.
 
 ## Roadmap / próximos passos

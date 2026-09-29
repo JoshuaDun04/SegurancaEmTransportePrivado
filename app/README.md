@@ -1,21 +1,21 @@
-# App — Câmera (React Native / Android)
+# App: Câmera (React Native / Android)
 
 App Android que fica no suporte do painel do carro: liga a câmera traseira,
 captura frames periodicamente e envia para o servidor local via WebSocket.
-Não roda nenhum modelo de IA no celular — isso fica todo no
+Não roda nenhum modelo de IA no celular; isso fica todo no
 [`backend/`](../backend/README.md).
 
 ## Pré-requisitos
 
-- **Node.js 22.11 ou mais novo** — [nodejs.org](https://nodejs.org)
+- **Node.js 22.11 ou mais novo**: [nodejs.org](https://nodejs.org)
 - **Android Studio** instalado, com o **Android SDK** e um dispositivo
   virtual (emulador) ou celular físico configurado
 - **CMake 3.31.x** no Android SDK (Android Studio → Settings → Languages &
   Frameworks → Android SDK → aba **SDK Tools** → marque **Show Package
   Details** → CMake **3.31.6**). O CMake 3.22.1 que vem por padrão quebra o
-  build no Windows — veja o troubleshooting no final.
+  build no Windows (veja o troubleshooting no final).
 - Windows: **virtualização habilitada na BIOS** (Intel VT-x/AMD SVM) para o
-  emulador funcionar — veja o troubleshooting no final se der o erro
+  emulador funcionar. Veja o troubleshooting no final se der o erro
   "Windows Hypervisor Platform is not enabled"
 
 ## Instalação
@@ -37,7 +37,7 @@ cmake.dir=C\:/Users/<seu-usuario>/AppData/Local/Android/Sdk/cmake/3.31.6
 
 ### Configurações nativas já aplicadas no projeto
 
-Não precisa fazer nada aqui — a lista é para referência (e para o relatório):
+Não precisa fazer nada aqui. A lista é para referência (e para o relatório):
 
 1. `android/build.gradle`: `minSdkVersion = 26` (exigido pelo VisionCamera v5).
 2. `AndroidManifest.xml`: permissões de `CAMERA` e `INTERNET`.
@@ -50,7 +50,7 @@ Não precisa fazer nada aqui — a lista é para referência (e para o relatóri
 
 As três dependências do VisionCamera (`react-native-vision-camera`,
 `react-native-nitro-modules`, `react-native-nitro-image`) precisam estar na
-mesma versão major (v5) — o `package-lock.json` já garante isso.
+mesma versão major (v5); o `package-lock.json` já garante isso.
 
 ## Rodando
 
@@ -120,7 +120,7 @@ Para instalar, escolha uma das opções:
 | `'adb' não é reconhecido` | Platform-tools fora do PATH | Configure `ANDROID_HOME` e adicione `%ANDROID_HOME%\platform-tools` ao PATH |
 | `Windows Hypervisor Platform is not enabled` | Virtualização desligada na BIOS, ou o recurso do Windows não está ativado | Habilite SVM Mode/VT-x na BIOS **e** "Windows Hypervisor Platform" em "Ativar recursos do Windows" |
 | `Project with path ':react-native-nitro-image' could not be found` | VisionCamera v5 precisa de `react-native-nitro-modules` **e** `react-native-nitro-image` juntos | `npm install react-native-vision-camera react-native-nitro-modules react-native-nitro-image` |
-| Erros de `Unresolved reference 'currentActivity'` / `Return type mismatch` no VisionCamera | Versão do VisionCamera incompatível com a versão do React Native (ex: v4 com RN muito recente) | Use a versão do VisionCamera compatível com sua versão de RN — geralmente a mais recente (v5) é a mais bem mantida |
+| Erros de `Unresolved reference 'currentActivity'` / `Return type mismatch` no VisionCamera | Versão do VisionCamera incompatível com a versão do React Native (ex: v4 com RN muito recente) | Use a versão do VisionCamera compatível com sua versão de RN, geralmente a mais recente (v5) é a mais bem mantida |
 | `ninja: error: manifest 'build.ninja' still dirty after 100 tries` (em `react-native-nitro-image`) | O ninja 1.10 do CMake 3.22.1 do SDK não lida com caminhos > ~250 caracteres no Windows | Instale o CMake 3.31.x e configure o `local.properties` (ver [Instalação](#instalação)). Apague as pastas `node_modules/*/android/.cxx` antes de buildar de novo |
 | App fecha sozinho quando o alarme dispara (`SecurityException: vibrate`) | Falta a permissão `VIBRATE` no manifest | Já corrigido em `AndroidManifest.xml` |
 | App fica em "connecting"/"disconnected" e a página `http://<ip>:8000` não abre no navegador do celular | Celular e PC em redes diferentes (ex: PC no cabo do modem da operadora, celular no Wi-Fi de um segundo roteador) ou rede de visitantes | Coloque os dois na mesma rede, ou use o cabo USB: `adb reverse tcp:8000 tcp:8000` e endereço `localhost:8000` |

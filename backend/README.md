@@ -1,4 +1,4 @@
-# Backend — Servidor de Detecção (Python)
+# Backend: Servidor de Detecção (Python)
 
 Servidor local que recebe os frames de vídeo do app (via WebSocket), roda os
 modelos de IA e decide se deve disparar o alarme.
@@ -19,17 +19,17 @@ modelos de IA e decide se deve disparar o alarme.
                                                     resultado (alerta + motivos)
 ```
 
-- **`server.py`** — servidor FastAPI, expõe:
+- **`server.py`**: servidor FastAPI, expõe:
   - `GET /` → serve uma página web de teste (`static/index.html`) que também
     funciona como cliente de demonstração (acessa a webcam do PC direto pelo
-    navegador, sem precisar do app Android — útil pra testar o modelo
+    navegador, sem precisar do app Android; útil pra testar o modelo
     isoladamente).
   - `WS /ws` → recebe frames em JSON (`{"frame": "<base64 jpeg>"}`) e responde
     com o resultado da detecção. Também aceita `{"type": "reset"}`, enviado
     quando o usuário cancela o alarme, para zerar o histórico de frames.
-- **`detector.py`** — o "cérebro":
+- **`detector.py`**: o "cérebro":
   - `WeaponDetector`: YOLOv8 pré-treinado (COCO) para `knife` e `scissors`.
-  - `ChokeDetector`: YOLOv8-Pose (várias pessoas por frame) — mede a
+  - `ChokeDetector`: YOLOv8-Pose (várias pessoas por frame). Mede a
     distância entre os punhos e o pescoço de cada pessoa, normalizada pela
     largura dos ombros. Conta como perigo: punho de **outra** pessoa perto do
     pescoço, ou os **dois** punhos da própria pessoa (uma mão só é ignorada,
@@ -41,9 +41,9 @@ modelos de IA e decide se deve disparar o alarme.
 
 ## Pré-requisitos
 
-- Python 3.10+ instalado ([python.org](https://python.org) — marque "Add
+- Python 3.10+ instalado ([python.org](https://python.org); marque "Add
   Python to PATH" na instalação)
-- Uma webcam (se for testar pela página web) — não é obrigatório se for
+- Uma webcam (se for testar pela página web). Não é obrigatório se for
   testar direto pelo app Android
 
 ## Rodando o servidor (jeito rápido)
@@ -52,7 +52,7 @@ Dê dois cliques em **`backend/iniciar.bat`** (ou rode `backend\iniciar.bat`
 no terminal). Na primeira vez ele:
 
 1. cria um ambiente Python isolado em `backend/.venv` (não vai para o git);
-2. instala as dependências do `requirements.txt` (alguns minutos — baixa o
+2. instala as dependências do `requirements.txt` (alguns minutos, porque baixa o
    PyTorch);
 3. se o PC tiver placa **NVIDIA**, troca o PyTorch pela versão com GPU
    (CUDA, ~3 GB de download);
@@ -107,7 +107,7 @@ Deixe essa janela aberta enquanto o app estiver em uso.
 
 ### Descobrindo o IP para conectar o app
 
-- **Emulador Android** (rodando no mesmo PC): use `10.0.2.2:8000` — é o
+- **Emulador Android** (rodando no mesmo PC): use `10.0.2.2:8000`. É o
   endereço especial que o emulador usa para "voltar" ao computador host.
 - **Celular físico** (na mesma rede Wi-Fi do PC): rode `ipconfig` (Windows)
   ou `ifconfig`/`ip addr` (Mac/Linux) e procure o "Endereço IPv4" da sua
@@ -119,7 +119,7 @@ Se o Firewall do Windows perguntar se quer permitir a conexão, clique em
 
 ## Testando sem o app (opcional)
 
-Abra `http://localhost:8000` no navegador do próprio PC — uma página de
+Abra `http://localhost:8000` no navegador do próprio PC. Uma página de
 teste abre a webcam e já roda a detecção, útil para validar o modelo antes
 de mexer no app Android. Ela desenha as caixas dos objetos e o esqueleto de
 cada pessoa detectada (verde normal, vermelho quando a heurística de
@@ -140,5 +140,5 @@ backend/
 ## Limitações e próximos passos
 
 Ver a seção **Limitações conhecidas** no [README geral](../README.md) do
-repositório — os pontos sobre modelo genérico e heurística de
+repositório. Os pontos sobre modelo genérico e heurística de
 estrangulamento se aplicam diretamente a este backend.
