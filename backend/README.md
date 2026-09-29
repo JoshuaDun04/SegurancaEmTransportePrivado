@@ -70,12 +70,22 @@ INFO:     Uvicorn running on http://0.0.0.0:8000
 
 O servidor usa a GPU NVIDIA automaticamente quando o PyTorch tem suporte a
 CUDA (a janela mostra `carregado em NVIDIA ...` ou `carregado em CPU`).
-Medido neste projeto, com os dois modelos por frame:
+Medido com `benchmark.py` (frame de 480x1040, como o app envia; mediana de
+100 repetições, os dois modelos por frame):
 
-| Hardware | Tempo por frame |
-|---|---|
-| CPU (Ryzen 7 5700X) | ~100–140 ms |
-| GPU (GTX 1650, FP16) | ~35 ms |
+| Hardware | Tempo por frame (mediana) | p95 |
+|---|---|---|
+| CPU (Ryzen 7 5700X) | 54,8 ms | 58,1 ms |
+| GPU (GTX 1650, FP32) | 20,8 ms | 24,2 ms |
+| GPU (GTX 1650, FP16) | 31,0 ms | 34,3 ms |
+
+Na GTX 1650, meia precisão (FP16) ficou **mais lenta** que FP32, por isso o
+servidor usa FP32. A causa não foi investigada (hipóteses: o modelo é pequeno
+demais para o ganho compensar o custo de conversão; a placa não tem Tensor
+Cores). Em outra GPU, vale medir antes de trocar. Para medir em outro hardware:
+```bash
+.venv\Scripts\python.exe benchmark.py
+```
 
 Se o `.venv` foi criado antes de instalar o driver NVIDIA, instale a versão
 com GPU manualmente:
@@ -122,6 +132,7 @@ backend/
 ├── detector.py        # pipeline de detecção (YOLO + pose)
 ├── server.py           # servidor FastAPI (WebSocket)
 ├── iniciar.bat         # atalho Windows: cria o .venv na 1ª vez e sobe o servidor
+├── benchmark.py        # mede a latência dos modelos (CPU x GPU)
 ├── static/index.html   # cliente web de teste (opcional, sem o app)
 └── requirements.txt
 ```

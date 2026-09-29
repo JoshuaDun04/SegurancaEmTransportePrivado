@@ -57,3 +57,6 @@ backend/.config/Ultralytics/
 *.mp4
 *.avi
 test_images/
+
+### ============ DATASET (imagens com pessoas: não versionar) ============
+dados/

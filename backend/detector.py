@@ -47,10 +47,13 @@ class SharedModel:
         self.model = YOLO(model_path)
         self.names = self.model.names
         self._lock = threading.Lock()
-        # Usa a GPU NVIDIA se o PyTorch tiver suporte a CUDA (bem mais rápido); senão, CPU.
-        # Na GPU, meia precisão (FP16) é mais rápida e praticamente não muda o resultado.
+        # Usa a GPU NVIDIA se o PyTorch tiver suporte a CUDA (~2,6x mais rápido); senão, CPU.
+        # Precisão FP32 mesmo na GPU: medido com benchmark.py, a GTX 1650 ficou mais
+        # LENTA em FP16 (31 ms contra 21 ms por frame). A causa não foi investigada
+        # (hipóteses: modelo pequeno demais para o ganho superar o custo de conversão;
+        # ausência de Tensor Cores). Em outra GPU, meça antes de trocar para "fp16".
         self.device = 0 if torch.cuda.is_available() else "cpu"
-        self.precision = "fp32" if self.device == "cpu" else "fp16"
+        self.precision = "fp32"
         # A primeira inferência é lenta (inicialização do PyTorch/CUDA). Fazendo ela aqui,
         # na subida do servidor, o primeiro frame do app já é processado na velocidade normal.
         self.predict(np.zeros((480, 640, 3), dtype=np.uint8), conf=0.5)

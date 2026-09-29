@@ -47,7 +47,7 @@ parte demorada (downloads e primeiro build) só acontece uma vez.
 | **Python 3.10 ou mais novo** | [python.org](https://www.python.org/downloads/) | ⚠️ Marque **"Add python.exe to PATH"** na primeira tela do instalador |
 | **Node.js 22.11 ou mais novo** (LTS) | [nodejs.org](https://nodejs.org) | Opções padrão |
 | **Android Studio** | [developer.android.com/studio](https://developer.android.com/studio) | Na primeira abertura, siga o assistente (modo *Standard*): ele baixa o Android SDK |
-| **Driver NVIDIA** (opcional) | [nvidia.com/drivers](https://www.nvidia.com/Download/index.aspx) | Só se o PC tiver placa NVIDIA — deixa a detecção ~3x mais rápida |
+| **Driver NVIDIA** (opcional) | [nvidia.com/drivers](https://www.nvidia.com/Download/index.aspx) | Só se o PC tiver placa NVIDIA — deixa a detecção ~2,6x mais rápida |
 
 ### 2. Configurar o Android SDK
 
