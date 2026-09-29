@@ -16,6 +16,7 @@ também de `pandas`: `.venv\Scripts\python.exe -m pip install pandas`).
 | 3 | `finetune_cv.py n 50 8` | Ajuste fino do YOLOv8n com validação cruzada de 3 partes **por sequência** | ~90 min |
 | 4 | `metricas.py` | Tabelas (`resultados/resultados.md`) e a Figura 5 do artigo | segundos |
 | 5 | `figura_exemplos.py` | Figura 3 do artigo, com os rostos desfocados | segundos |
+| 6 | `estimar_dados.py` | Consumo de internet móvel por hora e veículos por GPU (servidor remoto) | segundos |
 
 ```bash
 cd backend

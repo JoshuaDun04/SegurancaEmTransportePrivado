@@ -38,10 +38,10 @@ def desfocar_rostos(img, pose):
         # Tamanho da cabeça estimado pela distância entre os olhos, com limites
         olho_e, olho_d = kps[1], kps[2]
         dist_olhos = np.hypot(*(olho_e[:2] - olho_d[:2])) if min(olho_e[2], olho_d[2]) > 0.2 else 20
-        raio = float(np.clip(dist_olhos * 1.8, 18, 45))
-        # Elipse cobrindo testa, olhos, nariz e boca, sem descer até o pescoço
+        raio = float(np.clip(dist_olhos * 2.0, 22, 50))
+        # Elipse cobrindo da testa ao queixo (o centro fica um pouco abaixo dos olhos)
         mascara = np.zeros(img.shape[:2], np.uint8)
-        cv2.ellipse(mascara, (int(cx), int(cy - raio * 0.2)), (int(raio), int(raio * 1.25)), 0, 0, 360, 255, -1)
+        cv2.ellipse(mascara, (int(cx), int(cy + raio * 0.2)), (int(raio * 1.1), int(raio * 1.5)), 0, 0, 360, 255, -1)
         borrada = cv2.GaussianBlur(img, (0, 0), sigmaX=10)
         img[mascara > 0] = borrada[mascara > 0]
     return img

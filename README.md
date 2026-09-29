@@ -9,10 +9,14 @@
 
 Um celular fica preso no suporte da multimídia do carro, com a câmera
 voltada para o interior do veículo. Ele transmite os frames continuamente
-para um computador local (dentro do próprio carro, ex: um mini-PC/Raspberry
-Pi, ou o notebook do motorista), que roda os modelos de IA e decide se algo
-perigoso está acontecendo. Se detectar, dispara um alarme sonoro/visual e
-simula o acionamento de autoridades (polícia/ambulância).
+para um servidor, que roda os modelos de IA e decide se algo perigoso está
+acontecendo. Se detectar, dispara um alarme sonoro/visual e simula o
+acionamento de autoridades (polícia/ambulância).
+
+- **Hoje (protótipo):** o servidor roda em um computador na mesma rede local
+  do celular (Wi-Fi ou cabo USB).
+- **Plano futuro:** servidor remoto (nuvem ou central), com o celular
+  conectado pela internet móvel (4G/5G), atendendo vários veículos.
 
 ```
 ┌─────────────────────┐        Wi-Fi local        ┌──────────────────────────┐
@@ -22,9 +26,11 @@ simula o acionamento de autoridades (polícia/ambulância).
 └─────────────────────┘                             └──────────────────────────┘
 ```
 
-Por que processamento local e não em nuvem? Custo (não pagar por servidores
-online rodando 24/7) e latência (decisão precisa ser rápida, sem depender de
-conexão de internet estável dentro do carro).
+Por que processar no servidor e não no celular? O celular pode ser simples
+(não roda IA, gasta menos bateria e esquenta menos), o servidor usa GPU e os
+modelos são atualizados em um lugar só. Para o servidor remoto, o artigo
+estima o consumo de dados (~0,26–0,86 GB/h) e a capacidade de uma GPU
+(~10 veículos a 5 quadros/s) — ver `experimentos/estimar_dados.py`.
 
 ## Estrutura do repositório
 

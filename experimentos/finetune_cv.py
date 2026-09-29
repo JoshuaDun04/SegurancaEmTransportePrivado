@@ -65,6 +65,14 @@ def main():
         avaliar = [i for i in indice if i["clipe"] in clipes_teste]
         pasta = TREINOS / f"yolov8{tamanho}_parte{teste}"
         pasta.mkdir(exist_ok=True)
+        # Cada rodada grava seus resultados ao terminar; ao rodar de novo, as rodadas
+        # já concluídas são reaproveitadas (útil se o treino longo for interrompido).
+        parcial = pasta / "predicoes_teste.csv"
+        if parcial.exists():
+            with open(parcial, encoding="utf-8") as f:
+                linhas += list(csv.DictReader(f))
+            print(f"\n=== Parte {teste}: já concluída, reaproveitando {parcial} ===")
+            continue
         (pasta / "treino.txt").write_text(
             "\n".join(str(DADOS / "images" / i["arquivo"]) for i in treino), encoding="utf-8")
         (pasta / "teste.txt").write_text(
@@ -94,13 +102,19 @@ def main():
             linhas.append({"arquivo": item["arquivo"], "clipe": item["clipe"],
                            "quadro": item["quadro"], "rotulo": item["rotulo"], "parte": teste,
                            "ft_faca": maximo[0], "ft_enforcar": maximo[1]})
+        da_parte = [linha for linha in linhas if linha["parte"] == teste]
+        with open(parcial, "w", newline="", encoding="utf-8") as f:
+            escritor = csv.DictWriter(f, fieldnames=list(da_parte[0]))
+            escritor.writeheader()
+            escritor.writerows(da_parte)
 
     saida = SAIDA / f"finetune_yolov8{tamanho}_quadros.csv"
     with open(saida, "w", newline="", encoding="utf-8") as f:
         escritor = csv.DictWriter(f, fieldnames=list(linhas[0]))
         escritor.writeheader()
         escritor.writerows(linhas)
-    print(f"\nInferência (inclui leitura do arquivo): mediana {np.median(tempos[10:]):.1f} ms")
+    if len(tempos) > 10:
+        print(f"\nInferência (inclui leitura do arquivo): mediana {np.median(tempos[10:]):.1f} ms")
     print(f"Resultados em {saida}")
 
 

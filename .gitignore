@@ -39,6 +39,7 @@ app/*.orig.*
 ### ============ BACKEND (Python) ============
 backend/__pycache__/
 backend/**/__pycache__/
+**/__pycache__/
 backend/*.pyc
 backend/.venv/
 backend/venv/

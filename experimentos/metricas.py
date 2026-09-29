@@ -37,6 +37,17 @@ JANELA_ENFORCAR = (6, 12)   # K de W, como no ChokeDetector
 FPS_DATASET = 12.3
 
 
+def negativos(df):
+    """Quadros negativos: sem anotação E pertencentes a uma sequência normal.
+
+    Os poucos quadros sem anotação no início/fim das sequências de faca ou de
+    estrangulamento são transições da ação (ambíguos) e ficam fora das métricas
+    por quadro: não contam como positivos nem como negativos.
+    """
+    tipo = df.groupby("clipe")["rotulo"].transform(lambda s: s.mode().iat[0])
+    return df.rotulo.eq("normal") & tipo.eq("normal")
+
+
 def auc(pos, neg):
     """AUC pela estatística de Mann-Whitney (empates contam meio)."""
     pos, neg = np.asarray(pos, float), np.asarray(neg, float)
@@ -112,7 +123,7 @@ def fmt_tempo(quadros):
 def linha_quadro(df, escore, limiar, alvo, maior_e_perigo=True):
     s = df[escore]
     perigo = (s >= limiar) if maior_e_perigo else (s < limiar)
-    pos, neg = df.rotulo.eq(alvo), df.rotulo.eq("normal")
+    pos, neg = df.rotulo.eq(alvo), negativos(df)
     sinal = s if maior_e_perigo else -s.clip(upper=50)
     return perigo, {
         "revocacao": perigo[pos].mean(), "alarme_falso": perigo[neg].mean(),
@@ -211,7 +222,7 @@ def main():
                   "| mAP@0,5 (última época) |")
         md.append("|---|---|---|---|---|---|---|---|")
         for parte, g in ft.groupby("parte"):
-            neg = g.rotulo.eq("normal")
+            neg = negativos(g)
             alarme = (g.ft_faca >= 0.45) | (g.ft_enforcar >= 0.45)
             res_csv = RAIZ / "dados" / "treinos" / f"yolov8n_parte{parte}" / "treino" / "results.csv"
             mapa = "—"
@@ -233,13 +244,13 @@ def main():
     limiares = np.linspace(0, 1, 201)
     estilos = {"n": ("#bbbbbb", "--"), "s": ("#777777", "-."), "m": ("#444444", ":")}
     ax = eixos[0]
-    pos, neg = zs.rotulo.eq("FACA"), zs.rotulo.eq("normal")
+    pos, neg = zs.rotulo.eq("FACA"), negativos(zs)
     for m in "nsm":
         cor, ls = estilos[m]
         ax.plot([(zs[neg][f"faca_{m}"] >= t).mean() for t in limiares],
                 [(zs[pos][f"faca_{m}"] >= t).mean() for t in limiares], ls, color=cor, label=f"YOLOv8{m} COCO")
     if ft is not None:
-        pf, nf = ft.rotulo.eq("FACA"), ft.rotulo.eq("normal")
+        pf, nf = ft.rotulo.eq("FACA"), negativos(ft)
         ax.plot([(ft[nf].ft_faca >= t).mean() for t in limiares],
                 [(ft[pf].ft_faca >= t).mean() for t in limiares], "-", color="black", lw=1.6, label="YOLOv8n ajustado")
     ax.set_title("Faca", fontsize=9)
@@ -249,14 +260,14 @@ def main():
 
     ax = eixos[1]
     taus = np.linspace(0, 3, 301)
-    pos, neg = zs.rotulo.eq("ENFORCAR"), zs.rotulo.eq("normal")
+    pos, neg = zs.rotulo.eq("ENFORCAR"), negativos(zs)
     for p, (cor, ls) in (("n", estilos["n"]), ("s", estilos["s"])):
         e = zs[f"escore_enf_{p}"]
         ax.plot([(e[neg] < t).mean() for t in taus], [(e[pos] < t).mean() for t in taus], ls, color=cor,
                 label=f"Heurística (pose {p})")
         ax.plot((e[neg] < 0.6).mean(), (e[pos] < 0.6).mean(), "o", color=cor, ms=4)
     if ft is not None:
-        pf, nf = ft.rotulo.eq("ENFORCAR"), ft.rotulo.eq("normal")
+        pf, nf = ft.rotulo.eq("ENFORCAR"), negativos(ft)
         ax.plot([(ft[nf].ft_enforcar >= t).mean() for t in limiares],
                 [(ft[pf].ft_enforcar >= t).mean() for t in limiares], "-", color="black", lw=1.6,
                 label="YOLOv8n ajustado")
